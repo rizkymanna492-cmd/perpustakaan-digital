@@ -10,7 +10,7 @@ body {
     color: var(--app-fg, #ffffff);
     display: flex;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: auto;
 }
 
 * {
