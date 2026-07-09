@@ -317,6 +317,16 @@
                     <p><strong>Role:</strong> <span id="memberRole"></span></p>
                 </div>
                 <div style="margin-top:20px; padding:20px; border-radius:16px; background:#111827;">
+                    <h3>Ubah Password</h3>
+                    <div style="display:grid;gap:12px;max-width:420px;margin-top:10px;">
+                        <input type="password" id="currentPassword" placeholder="Password saat ini" style="padding:12px;border-radius:12px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;">
+                        <input type="password" id="newPassword" placeholder="Password baru" style="padding:12px;border-radius:12px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;">
+                        <input type="password" id="confirmPassword" placeholder="Ulangi password baru" style="padding:12px;border-radius:12px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;">
+                        <button onclick="changePassword()" style="padding:12px 16px;border:none;border-radius:12px;background:#2563eb;color:white;cursor:pointer;">Simpan Password</button>
+                        <p id="passwordMessage" style="margin:0;color:#94a3b8;"></p>
+                    </div>
+                </div>
+                <div style="margin-top:20px; padding:20px; border-radius:16px; background:#111827;">
                     <h3>Riwayat Peminjaman</h3>
                     <table style="width:100%; border-collapse:collapse;">
                         <thead>

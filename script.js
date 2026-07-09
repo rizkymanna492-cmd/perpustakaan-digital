@@ -130,6 +130,52 @@ function renderMemberProfile() {
         `<tr><td colspan="3" style="padding:10px;color:#94a3b8;">Belum ada riwayat peminjaman.</td></tr>`;
 }
 
+function changePassword() {
+    const currentPassword = document.getElementById('currentPassword')?.value.trim();
+    const newPassword = document.getElementById('newPassword')?.value.trim();
+    const confirmPassword = document.getElementById('confirmPassword')?.value.trim();
+    const passwordMessage = document.getElementById('passwordMessage');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        if (passwordMessage) passwordMessage.innerText = 'Lengkapi semua kolom password.';
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        if (passwordMessage) passwordMessage.innerText = 'Password baru minimal 6 karakter.';
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        if (passwordMessage) passwordMessage.innerText = 'Password baru dan konfirmasi tidak cocok.';
+        return;
+    }
+
+    getUsers().then(users => {
+        const userIndex = users.findIndex(user => user.username === username);
+        if (userIndex === -1) {
+            if (passwordMessage) passwordMessage.innerText = 'Akun tidak ditemukan.';
+            return;
+        }
+
+        const user = users[userIndex];
+        if (user.password !== currentPassword) {
+            if (passwordMessage) passwordMessage.innerText = 'Password saat ini salah.';
+            return;
+        }
+
+        users[userIndex].password = newPassword;
+        saveUsers(users).then(() => {
+            if (passwordMessage) passwordMessage.innerText = 'Password berhasil diubah.';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }).catch(error => {
+            console.error(error);
+            if (passwordMessage) passwordMessage.innerText = 'Gagal menyimpan password.';
+        });
+    });
+}
 
 function applyTheme(theme) {
     const root = document.documentElement;
