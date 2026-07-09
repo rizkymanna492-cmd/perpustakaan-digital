@@ -116,6 +116,20 @@ window.onload = async function() {
         profileLogoutBtn.addEventListener('click', openModal);
     }
 
+    // bind fast handlers for modal buttons to avoid click delays on some devices
+    const logoutModal = document.getElementById('logoutModal');
+    if (logoutModal) {
+        const btnConfirm = logoutModal.querySelector('.btn-confirm');
+        const btnCancel = logoutModal.querySelector('.btn-cancel');
+        const bindFast = (el, fn) => {
+            if (!el) return;
+            el.addEventListener('pointerdown', (ev) => { ev.preventDefault && ev.preventDefault(); fn(); }, { passive: false });
+            el.addEventListener('click', (ev) => { ev.preventDefault && ev.preventDefault(); fn(); });
+        };
+        bindFast(btnConfirm, confirmLogout);
+        bindFast(btnCancel, cancelLogout);
+    }
+
 }
 
 async function updateSupabaseStatus() {
@@ -289,12 +303,14 @@ function logout() {
     modal.classList.remove('hidden');
     try {
         modal.style.display = 'flex';
+        // force reflow to ensure browser paints modal before focusing
+        modal.getBoundingClientRect();
     } catch (e) {}
 
-    // fokus ke tombol konfirmasi bila ada
+    // fokus ke tombol konfirmasi bila ada (do it on next frame)
     const confirmBtn = modal.querySelector('.btn-confirm') || document.getElementById('confirmLogoutBtn');
     if (confirmBtn && typeof confirmBtn.focus === 'function') {
-        setTimeout(() => confirmBtn.focus(), 50);
+        requestAnimationFrame(() => confirmBtn.focus());
     }
 }
 
