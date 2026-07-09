@@ -81,6 +81,10 @@ window.onload = async function() {
 
         }
 
+        const topbarUsername = document.getElementById('topbarUsername');
+        if (topbarUsername) {
+            topbarUsername.innerText = username ? `Hai, ${username}` : '';
+        }
 
     }
 
