@@ -92,6 +92,11 @@ window.onload = async function() {
     // Sync state & render buku awal
     await refreshLocalState();
     renderBooks();
+    renderTransactions();
+    const borrowCount = document.getElementById('borrowCount');
+    if (borrowCount) {
+        borrowCount.innerText = transactions.length;
+    }
 
 }
 
