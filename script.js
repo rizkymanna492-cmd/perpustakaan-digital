@@ -793,14 +793,37 @@ function openReaderForBorrow(index) {
     }
     wrap.style.display = 'block';
 
-    const readerWindow = window.open(
-        book.ebook,
-        '_blank',
-        'width=1400,height=900,scrollbars=yes,resizable=yes'
-    );
+    function openEbookUrl(url) {
+        const readerWindow = window.open(
+            url,
+            '_blank',
+            'width=1400,height=900,scrollbars=yes,resizable=yes'
+        );
 
-    if (!readerWindow) {
-        alert('Popup diblokir. Silakan izinkan popup untuk membuka file e-book.');
+        if (!readerWindow) {
+            alert('Popup diblokir. Silakan izinkan popup untuk membuka file e-book.');
+        }
+    }
+
+    if (book.ebookType === 'pdf' && book.ebook.startsWith('data:application/pdf')) {
+        try {
+            const parts = book.ebook.split(',');
+            const contentType = parts[0].match(/data:(.*?);/)?.[1] || 'application/pdf';
+            const base64 = parts[1] || '';
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            const blob = new Blob([bytes], { type: contentType });
+            const blobUrl = URL.createObjectURL(blob);
+            openEbookUrl(blobUrl);
+        } catch (error) {
+            console.error('Gagal membuat PDF dari data URL', error);
+            openEbookUrl(book.ebook);
+        }
+    } else {
+        openEbookUrl(book.ebook);
     }
 }
 
