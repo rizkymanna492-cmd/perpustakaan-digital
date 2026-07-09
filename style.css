@@ -758,6 +758,42 @@ table button:hover {
     animation: floaty 6s ease-in-out infinite;
 }
 
+/* Custom styled scrollbars (WebKit + Firefox) */
+:root {
+    --scrollbar-track: rgba(2,6,23,0.4);
+    --scrollbar-thumb-start: #2563eb;
+    --scrollbar-thumb-end: #60a5fa;
+    --scrollbar-thumb-hover-start: #1e40af;
+    --scrollbar-thumb-hover-end: #3b82f6;
+}
+
+/* WebKit browsers */
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--scrollbar-thumb-start), var(--scrollbar-thumb-end));
+    border-radius: 999px;
+    border: 3px solid rgba(0,0,0,0.12);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--scrollbar-thumb-hover-start), var(--scrollbar-thumb-hover-end));
+}
+
+/* Firefox */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-end) transparent;
+}
+
+
 .card.blue,
 .card.purple,
 .card.orange {
