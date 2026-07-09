@@ -98,6 +98,7 @@ window.onload = async function() {
     renderBooks();
     renderTransactions();
     renderMemberProfile();
+    await renderDashboardCharts();
     await updateSupabaseStatus();
     const borrowCount = document.getElementById('borrowCount');
     if (borrowCount) {
@@ -134,6 +135,44 @@ async function updateSupabaseStatus() {
         statusEl.innerText = 'Supabase error';
         statusEl.style.borderColor = '#f97316';
         statusEl.style.color = '#fb923c';
+    }
+}
+
+async function renderDashboardCharts() {
+    const userList = await loadUsers();
+    const bookCount = books.length;
+    const borrowedCount = transactions.length;
+    const availableCount = books.reduce((sum, book) => sum + Math.max(0, book.stock), 0);
+    const maxValue = Math.max(bookCount, borrowedCount, availableCount, 1);
+
+    const setChart = (id, labelId, value, cssClass) => {
+        const bar = document.getElementById(id);
+        const label = document.getElementById(labelId);
+        if (!bar || !label) return;
+        bar.style.width = `${Math.round((value / maxValue) * 100)}%`;
+        bar.className = `chart-bar-inner ${cssClass}`;
+        label.innerText = value;
+    };
+
+    setChart('chartTotalBooks', 'chartTotalBooksLabel', bookCount, 'white');
+    setChart('chartBorrowedBooks', 'chartBorrowedBooksLabel', borrowedCount, 'orange');
+    setChart('chartAvailableBooks', 'chartAvailableBooksLabel', availableCount, 'green');
+
+    const userCountEl = document.getElementById('userCount');
+    if (userCountEl) {
+        userCountEl.innerText = userList.length;
+    }
+}
+
+async function loadUsers() {
+    if (window.storage?.loadUsers) {
+        return await window.storage.loadUsers();
+    }
+
+    try {
+        return JSON.parse(localStorage.getItem('users')) || [];
+    } catch (error) {
+        return [];
     }
 }
 
