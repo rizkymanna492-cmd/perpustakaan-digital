@@ -52,11 +52,10 @@ async function register() {
 
     await saveUsers(users);
 
-    document.getElementById('registerUsername').value = '';
-    document.getElementById('registerPassword').value = '';
-
-    alert('Akun berhasil dibuat');
-    showRegister();
+    saveAuth({
+        username,
+        role: 'client'
+    });
 }
 
 function showRegister() {
