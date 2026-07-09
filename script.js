@@ -826,6 +826,36 @@ function openReaderForBorrow(index) {
         }
     }
 
+    const readerActions = document.getElementById('readerActions');
+    const readerEmbed = document.getElementById('readerEmbed');
+    const readerIframe = document.getElementById('readerIframe');
+
+    if (readerActions) {
+        readerActions.innerHTML = '';
+    }
+
+    if (readerEmbed) {
+        readerEmbed.style.display = 'none';
+    }
+
+    function openEbookUrl(url) {
+        if (readerActions) {
+            readerActions.innerHTML = `
+                <button onclick="window.open('${url}', '_blank')" style="padding:10px 14px;border:none;border-radius:12px;background:#2563eb;color:white;cursor:pointer;">
+                    Buka PDF di Tab Baru
+                </button>
+                <button onclick="downloadEbook('${url}')" style="padding:10px 14px;border:none;border-radius:12px;background:#14b8a6;color:white;cursor:pointer;">
+                    Download PDF
+                </button>
+            `;
+        }
+
+        if (readerEmbed && readerIframe) {
+            readerIframe.src = url;
+            readerEmbed.style.display = 'block';
+        }
+    }
+
     if (book.ebookType === 'pdf' && book.ebook.startsWith('data:application/pdf')) {
         try {
             const parts = book.ebook.split(',');
@@ -846,6 +876,15 @@ function openReaderForBorrow(index) {
     } else {
         openEbookUrl(book.ebook);
     }
+}
+
+function downloadEbook(url) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'ebook.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function closeReader() {
