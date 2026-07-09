@@ -282,7 +282,18 @@ function logout() {
         performLogout();
         return;
     }
+
+    // pastikan modal terlihat (tangani kemungkinan CSS/display yang menahan)
     modal.classList.remove('hidden');
+    try {
+        modal.style.display = 'flex';
+    } catch (e) {}
+
+    // fokus ke tombol konfirmasi bila ada
+    const confirmBtn = modal.querySelector('.btn-confirm') || document.getElementById('confirmLogoutBtn');
+    if (confirmBtn && typeof confirmBtn.focus === 'function') {
+        setTimeout(() => confirmBtn.focus(), 50);
+    }
 }
 
 function cancelLogout() {
