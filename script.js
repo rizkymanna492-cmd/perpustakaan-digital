@@ -105,13 +105,15 @@ window.onload = async function() {
         borrowCount.innerText = transactions.length;
     }
 
-    // bind profile logout button (ensure modal opens reliably)
+    // bind profile logout button (pointerdown for snappier response + click fallback)
     const profileLogoutBtn = document.getElementById('profileLogoutBtn');
     if (profileLogoutBtn) {
-        profileLogoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+        const openModal = (e) => {
+            e && e.preventDefault && e.preventDefault();
             logout();
-        });
+        };
+        profileLogoutBtn.addEventListener('pointerdown', openModal, { passive: false });
+        profileLogoutBtn.addEventListener('click', openModal);
     }
 
 }
