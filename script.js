@@ -513,9 +513,11 @@ function clearForm() {
 function searchBook() {
 
     const keyword =
-        document.getElementById('search')
-        .value
+        (document.getElementById('search')?.value || '')
         .toLowerCase();
+
+    const statusFilter =
+        document.getElementById('statusFilter')?.value || 'all';
 
     const cards =
         document.querySelectorAll('#bookList .product-card');
@@ -525,8 +527,22 @@ function searchBook() {
         const text =
             card.innerText.toLowerCase();
 
+        const matchesKeyword =
+            text.includes(keyword);
+
+        const stockText =
+            card.querySelector('.product-stock')?.innerText || '';
+
+        const stockValue =
+            parseInt(stockText.replace(/[^0-9]/g, '')) || 0;
+
+        const matchesStatus =
+            statusFilter === 'all' ||
+            (statusFilter === 'available' && stockValue > 0) ||
+            (statusFilter === 'out' && stockValue <= 0);
+
         card.style.display =
-            text.includes(keyword) ?
+            matchesKeyword && matchesStatus ?
             '' :
             'none';
 

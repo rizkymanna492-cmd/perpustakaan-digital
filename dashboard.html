@@ -138,9 +138,17 @@
 
                 <div class="top-content">
 
-                    <h2>Data Buku</h2>
-
-                    <input type="text" id="search" placeholder="Cari buku..." onkeyup="searchBook()">
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                        <h2 style="margin:0;">Data Buku</h2>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                            <input type="text" id="search" placeholder="Cari buku..." onkeyup="searchBook()">
+                            <select id="statusFilter" onchange="searchBook()">
+                                <option value="all">Semua Status</option>
+                                <option value="available">Tersedia</option>
+                                <option value="out">Habis</option>
+                            </select>
+                        </div>
+                    </div>
 
                 </div>
 
