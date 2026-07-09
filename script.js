@@ -1,0 +1,831 @@
+let role = localStorage.getItem('role') || '';
+let username = localStorage.getItem('username') || '';
+
+let books = [];
+let transactions = [];
+
+// Pastikan selalu ambil data terbaru tiap halaman dibuka
+async function refreshLocalState() {
+    const auth = window.storage?.getAuth ? window.storage.getAuth() : {};
+    role = auth.role || localStorage.getItem('role') || '';
+    username = auth.username || localStorage.getItem('username') || '';
+
+    if (window.storage?.loadBooks) {
+        books = await window.storage.loadBooks();
+    } else {
+        books = JSON.parse(localStorage.getItem('books')) || [];
+    }
+
+    if (window.storage?.loadTransactions) {
+        transactions = await window.storage.loadTransactions();
+    } else {
+        transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    }
+
+    localStorage.setItem('books', JSON.stringify(books));
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
+window.onload = async function() {
+
+    // theme init
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    applyTheme(savedTheme);
+    const thumb = document.getElementById('themeThumb');
+    if (thumb) thumb.classList.toggle('thumb-light', savedTheme === 'light');
+
+    // Login state
+    const roleText =
+        document.getElementById('userRole');
+
+
+    if (roleText) {
+
+        if (role === 'admin') {
+
+            roleText.innerHTML = '<i class="fa-solid fa-crown"></i>';
+            roleText.classList.add('admin-role');
+            roleText.classList.remove('client-member');
+
+            document
+                .querySelectorAll('.admin-only')
+                .forEach(el => {
+
+                    el.style.display = 'block';
+
+                });
+
+
+
+        } else {
+
+            roleText.innerHTML = '<i class="fa-solid fa-star"></i>';
+            roleText.classList.add('client-member');
+            roleText.classList.remove('admin-role');
+
+            document
+                .querySelectorAll('.admin-only')
+                .forEach(el => {
+
+                    el.style.display = 'none';
+
+                });
+
+
+
+            const memberPage = document.getElementById('member');
+            if (memberPage) {
+                const memberInfo = document.getElementById('memberInfo');
+                if (memberInfo) memberInfo.innerHTML = `Anda masuk sebagai <i class="fa-solid fa-crown"></i> (${username}).`;
+            }
+
+        }
+
+
+    }
+
+
+
+    // Upload drag/drop
+    setupUploadHandlers();
+
+    // Sync state & render buku awal
+    await refreshLocalState();
+    renderBooks();
+
+}
+
+
+function applyTheme(theme) {
+    const root = document.documentElement;
+    if (theme === 'light') {
+        root.style.setProperty('--app-bg', '#f1f5f9');
+        root.style.setProperty('--app-fg', '#0f172a');
+    } else {
+        root.style.setProperty('--app-bg', '#0f172a');
+        root.style.setProperty('--app-fg', '#ffffff');
+    }
+}
+
+
+
+function logout() {
+
+    if (window.storage?.clearAuth) {
+        window.storage.clearAuth();
+    } else {
+        localStorage.removeItem('role');
+        localStorage.removeItem('username');
+    }
+
+    window.location.href = 'index.html';
+
+}
+
+
+function showMemberPanel() {
+    const memberPage = document.getElementById('member');
+    if (!memberPage) return;
+
+    // tampilkan halaman member (dan sembunyikan halaman lain)
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(page => page.classList.add('hidden'));
+
+    memberPage.classList.remove('hidden');
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+function persistBooks() {
+    localStorage.setItem('books', JSON.stringify(books));
+    if (window.storage?.saveBooks) {
+        return window.storage.saveBooks(books);
+    }
+    return Promise.resolve(books);
+}
+
+function persistTransactions() {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    if (window.storage?.saveTransactions) {
+        return window.storage.saveTransactions(transactions);
+    }
+    return Promise.resolve(transactions);
+}
+
+function setupUploadHandlers() {
+
+    const uploadBox =
+        document.getElementById('uploadBox');
+
+    const coverInput =
+        document.getElementById('cover');
+
+    const previewImage =
+        document.getElementById('previewImage');
+
+    if (!uploadBox || !coverInput) return;
+
+    const setPreview = (file) => {
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+
+            if (previewImage) {
+
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+
+            }
+
+        };
+
+        reader.readAsDataURL(file);
+
+    };
+
+    const preventDefaults = (e) => {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+    };
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+
+        uploadBox.addEventListener(evt, (e) => {
+
+            preventDefaults(e);
+
+            if (evt === 'dragenter' || evt === 'dragover') {
+
+                uploadBox.classList.add('drag-active');
+
+            } else {
+
+                uploadBox.classList.remove('drag-active');
+
+            }
+
+        });
+
+    });
+
+    uploadBox.addEventListener('drop', (e) => {
+
+        const dt = e.dataTransfer;
+        const file = dt && dt.files && dt.files[0];
+
+        if (!file) return;
+
+        coverInput.files = dt.files;
+
+        setPreview(file);
+
+    });
+
+    uploadBox.addEventListener('click', () => {
+
+        coverInput.click();
+
+    });
+
+    coverInput.addEventListener('change', () => {
+
+        const file = coverInput.files[0];
+        setPreview(file);
+
+    });
+
+}
+
+function addBook() {
+
+    const titleInput =
+        document.getElementById('title');
+
+    const authorInput =
+        document.getElementById('author');
+
+    const stockInput =
+        document.getElementById('stock');
+
+    const coverInput =
+        document.getElementById('cover');
+
+    const ebookInput =
+        document.getElementById('ebook');
+
+    const uploadBox =
+        document.getElementById('uploadBox');
+
+    // Jika uploadBox/kontrol lain tidak ada, jangan buat input “mentok”.
+    if (!titleInput || !authorInput || !stockInput || !coverInput) {
+        console.warn('addBook: form element tidak ditemukan');
+        return;
+    }
+
+    if (uploadBox && uploadBox.classList.contains('upload-disabled')) {
+        return;
+    }
+
+    // reset preview jika pernah gagal
+    const previewImage =
+        document.getElementById('previewImage');
+    if (previewImage) previewImage.style.display = 'none';
+
+
+    const title =
+        titleInput.value.trim();
+
+    const author =
+        authorInput.value.trim();
+
+    const stock =
+        stockInput.value.trim();
+
+    const file =
+        coverInput.files[0];
+
+    // load ebook file (PDF/EPUB) jadi base64 agar bisa dibaca di iframe
+    const ebookFile =
+        ebookInput && ebookInput.files && ebookInput.files[0];
+
+    const ebookType =
+        ebookFile && ebookFile.name ?
+        ebookFile.name.toLowerCase().endsWith('.pdf') ?
+        'pdf' :
+        'epub' :
+        '';
+
+    if (title === '' || author === '' || stock === '') {
+
+
+        alert('Lengkapi data buku');
+
+        return;
+
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+
+        const coverDataUrl = e.target.result;
+
+        // baca ebook jika ada
+        if (!ebookFile) {
+            const book = {
+                id: books.length + 1,
+                title: title,
+                author: author,
+                stock: parseInt(stock),
+                cover: coverDataUrl,
+                ebook: '',
+                ebookType: ''
+            };
+
+            books.push(book);
+            persistBooks();
+            renderBooks();
+            clearForm();
+            return;
+        }
+
+        const ebookReader = new FileReader();
+        ebookReader.onload = function(ev) {
+            const ebookDataUrl = ev.target.result;
+
+            const book = {
+                id: books.length + 1,
+                title: title,
+                author: author,
+                stock: parseInt(stock),
+                cover: coverDataUrl,
+                ebook: ebookDataUrl,
+                ebookType: ebookType
+            };
+
+            books.push(book);
+            persistBooks();
+            renderBooks();
+            clearForm();
+        };
+
+        ebookReader.readAsDataURL(ebookFile);
+    };
+
+    if (file) {
+
+        reader.readAsDataURL(file);
+
+    } else {
+
+        const book = {
+
+            id: books.length + 1,
+            title: title,
+            author: author,
+            stock: parseInt(stock),
+
+            cover: ''
+
+        };
+
+        books.push(book);
+
+        persistBooks();
+
+        renderBooks();
+
+        clearForm();
+
+    }
+
+}
+
+
+
+function renderRightStripBooks() {
+
+    const sideBookList =
+        document.getElementById('sideBookList');
+
+    if (!sideBookList) return;
+
+    sideBookList.innerHTML = '';
+
+    books.forEach((book, index) => {
+
+        sideBookList.innerHTML += `
+
+          <div class="side-book">
+
+            <img src="${book.cover}" class="side-book-cover" onclick="handleBorrowFromList(${index})">
+
+            <div class="side-book-info">
+
+              <h3>${book.title}</h3>
+
+              <p>${book.author}</p>
+
+              <p class="side-book-stock">Stock: ${book.stock}</p>
+
+              <button class="side-book-btn" onclick="handleBorrowFromList(${index})">Lihat</button>
+
+            </div>
+
+          </div>
+
+        `;
+
+    });
+
+}
+
+function renderBooks() {
+
+    renderRightStripBooks();
+
+    const bookList =
+        document.getElementById('bookList');
+
+    const sideBookList =
+        document.getElementById('sideBookList');
+
+    bookList.innerHTML = '';
+
+    if (sideBookList) sideBookList.innerHTML = '';
+
+    books.forEach((book, index) => {
+
+                bookList.innerHTML += `
+
+          <div class="product-card">
+
+            <img src="${book.cover}" class="product-cover" />
+
+            <div class="product-title">${book.title}</div>
+
+            <div class="product-author">${book.author}</div>
+
+            <div class="product-stock">Stock: ${book.stock}</div>
+
+            <div class="product-actions">
+
+              <button onclick="handleBorrowFromList(${index})">Pinjam</button>
+
+              ${role === 'admin' ? `<button class="danger" onclick="deleteBook(${index})">Hapus</button>` : ''}
+
+            </div>
+
+          </div>
+
+        `;
+
+    });
+
+    document.getElementById('totalBooks').innerText =
+        books.length;
+
+}
+
+function deleteBook(index) {
+
+    books.splice(index, 1);
+
+    persistBooks();
+
+    renderBooks();
+
+}
+
+function clearForm() {
+
+    document.getElementById('title').value = '';
+
+    document.getElementById('author').value = '';
+
+    document.getElementById('stock').value = '';
+
+    document.getElementById('title').focus();
+
+}
+
+
+function searchBook() {
+
+    const keyword =
+        document.getElementById('search')
+        .value
+        .toLowerCase();
+
+    const cards =
+        document.querySelectorAll('#bookList .product-card');
+
+    cards.forEach(card => {
+
+        const text =
+            card.innerText.toLowerCase();
+
+        card.style.display =
+            text.includes(keyword) ?
+            '' :
+            'none';
+
+    });
+
+}
+
+function borrowBook() {
+
+    const borrower =
+        document.getElementById('borrowName').value;
+
+    const bookId =
+        parseInt(
+            document.getElementById('borrowBookId').value
+        );
+
+    const book =
+        books.find(book => book.id === bookId);
+
+    if (!book) {
+
+        alert('Buku tidak ditemukan');
+        return;
+
+    }
+
+    if (book.stock <= 0) {
+
+        alert('Stock buku habis');
+        return;
+
+    }
+
+    book.stock--;
+
+    const transaction = {
+
+        borrower: borrower,
+
+        bookId: book.id,
+
+        title: book.title,
+
+        status: 'Dipinjam'
+
+    };
+
+    transactions.push(transaction);
+
+    persistTransactions();
+
+    renderBooks();
+
+    renderTransactions();
+
+    document.getElementById('borrowCount')
+        .innerText = transactions.length;
+
+}
+
+function renderTransactions() {
+
+    const borrowList =
+        document.getElementById('borrowList');
+
+    const returnList =
+        document.getElementById('returnList');
+
+    borrowList.innerHTML = '';
+    returnList.innerHTML = '';
+
+    transactions.forEach((trx, index) => {
+
+        borrowList.innerHTML += `
+
+      <tr>
+
+        <td>${trx.borrower}</td>
+
+        <td>${trx.title}</td>
+
+        <td>${trx.status}</td>
+
+        <td>
+          <button onclick="openReaderForBorrow(${index})">Baca Sekarang</button>
+        </td>
+
+      </tr>
+
+    `;
+
+        returnList.innerHTML += `
+
+      <tr>
+
+        <td>${trx.borrower}</td>
+
+        <td>${trx.title}</td>
+
+        <td>${trx.status}</td>
+
+        <td>
+
+          <button onclick="returnBook(${index})">
+
+            Kembalikan
+
+          </button>
+
+        </td>
+
+      </tr>
+
+    `;
+
+    });
+
+}
+
+function returnBook(index) {
+
+    const trx = transactions[index];
+
+    const book =
+        books.find(book => book.title === trx.title);
+
+    if (book) {
+
+        book.stock++;
+
+    }
+
+    transactions.splice(index, 1);
+
+    persistTransactions();
+
+    renderBooks();
+
+    renderTransactions();
+
+    document.getElementById('borrowCount')
+        .innerText = transactions.length;
+
+}
+
+function handleBorrowFromList(index) {
+
+    // Saat tombol Lihat/Pinjam diklik, popup menampilkan detail buku (jumlah pinjam tetap via borrowQty)
+
+
+    const book = books[index];
+
+    if (!book) return;
+
+    document.getElementById('popupImage').src = book.cover;
+
+    document.getElementById('popupTitle').innerText = book.title;
+
+    document.getElementById('popupAuthor').innerText = book.author;
+
+    document.getElementById('popupStock').innerText = `Stock: ${book.stock}`;
+
+    const borrowQtyInput = document.getElementById('borrowQty');
+
+    borrowQtyInput.max = book.stock;
+
+    borrowQtyInput.value = 1;
+
+    const popup = document.getElementById('popup');
+
+    popup.classList.remove('hidden');
+
+}
+
+function confirmBorrow() {
+
+    const qty = parseInt(document.getElementById('borrowQty').value);
+
+    const popupTitle = document.getElementById('popupTitle').innerText;
+
+    const book = books.find(b => b.title === popupTitle);
+
+    if (!book) {
+
+        closePopup();
+
+        return;
+
+    }
+
+    if (!qty || qty < 1) {
+
+        alert('Jumlah pinjam tidak valid');
+        return;
+
+    }
+
+    if (book.stock < qty) {
+
+        alert('Stock tidak cukup');
+        return;
+
+    }
+
+    book.stock -= qty;
+
+    const transaction = {
+        borrower: document.getElementById('borrowName')?.value || 'User',
+        bookId: book.id,
+        title: book.title,
+        status: `Dipinjam (${qty})`
+    };
+
+    transactions.push(transaction);
+
+    persistBooks();
+
+    persistTransactions();
+
+    renderBooks();
+
+    renderTransactions();
+
+    closePopup();
+
+    document.getElementById('borrowCount').innerText = transactions.length;
+
+}
+
+function closePopup() {
+
+    document.getElementById('popup').classList.add('hidden');
+
+}
+
+function openReaderForBorrow(index) {
+
+    const trx = transactions[index];
+    if (!trx) return;
+
+    const book = (trx.bookId !== undefined ? books.find(b => b.id === trx.bookId) : null) ||
+        books.find(b => b.title === trx.title);
+    if (!book) return;
+
+    const wrap = document.getElementById('readerWrap');
+    const titleEl = document.getElementById('readerTitle');
+    const authorEl = document.getElementById('readerAuthor');
+    const hint = document.getElementById('readerHint');
+    const notice = document.getElementById('readerNotice');
+
+    if (!wrap) return;
+
+    titleEl && (titleEl.innerText = book.title || '-');
+    authorEl && (authorEl.innerText = book.author || '');
+
+    if (!book.ebook) {
+        if (hint) hint.style.display = 'block';
+        if (notice) notice.innerText = 'Buku ini belum memiliki file e-book.';
+        wrap.style.display = 'block';
+        return;
+    }
+
+    if (hint) hint.style.display = 'none';
+    if (notice) {
+        notice.innerText = book.ebookType === 'pdf'
+            ? 'File PDF sedang dibuka di tab browser...'
+            : 'File e-book sedang dibuka di tab browser...';
+    }
+    wrap.style.display = 'block';
+
+    const readerWindow = window.open(
+        book.ebook,
+        '_blank',
+        'width=1400,height=900,scrollbars=yes,resizable=yes'
+    );
+
+    if (!readerWindow) {
+        alert('Popup diblokir. Silakan izinkan popup untuk membuka file e-book.');
+    }
+}
+
+function closeReader() {
+    const wrap = document.getElementById('readerWrap');
+    const hint = document.getElementById('readerHint');
+    const notice = document.getElementById('readerNotice');
+    if (hint) hint.style.display = 'none';
+    if (notice) notice.innerText = 'File e-book akan dibuka di tab browser.';
+    if (wrap) wrap.style.display = 'none';
+}
+
+function showPage(pageId) {
+
+    const pages =
+        document.querySelectorAll('.page');
+
+    pages.forEach(page => {
+
+        page.classList.add('hidden');
+
+    });
+
+    document
+        .getElementById(pageId)
+        .classList.remove('hidden');
+
+}

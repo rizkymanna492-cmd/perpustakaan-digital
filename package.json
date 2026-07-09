@@ -1,0 +1,16 @@
+{
+    "name": "perpustakaan-digital",
+    "version": "1.0.0",
+    "description": "Aplikasi Sistem Perpustakaan Digital",
+    "main": "main.js",
+    "scripts": {
+        "start": "node server.js",
+        "web": "node server.js",
+        "desktop": "electron .",
+        "build": "electron-builder"
+    },
+    "devDependencies": {
+        "electron": "^30.5.1",
+        "electron-builder": "^24.13.3"
+    }
+}

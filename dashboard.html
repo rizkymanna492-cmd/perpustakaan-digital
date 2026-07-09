@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+</head>
+
+<body>
+
+    <div class="sidebar">
+
+        <div class="logo">
+
+            <i class="fa-solid fa-book"></i>
+            <h2>Library</h2>
+
+        </div>
+
+        <ul>
+
+            <li onclick="showPage('dashboard')" class="active">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </li>
+
+            <li onclick="showPage('books')">
+                <i class="fa-solid fa-book-open"></i> Data Buku
+            </li>
+
+            <li onclick="showPage('borrow')">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i> Peminjaman
+            </li>
+
+            <li onclick="showPage('return')">
+                <i class="fa-solid fa-rotate-left"></i> Pengembalian
+            </li>
+
+        </ul>
+
+    </div>
+
+    <div class="main">
+
+        <div class="top-actions">
+
+
+
+        </div>
+
+
+        <div class="topbar">
+
+
+
+            <div>
+
+
+                <h1>Perpustakaan Digital</h1>
+
+
+
+            </div>
+
+            <div class="user-role" id="userRole"></div>
+
+        </div>
+
+        <!-- DASHBOARD -->
+
+        <div id="dashboard" class="page">
+
+
+            <div class="cards">
+
+                <div class="card blue">
+
+                    <div>
+
+                        <h3>Total Buku</h3>
+
+                        <p id="totalBooks">0</p>
+
+                    </div>
+
+                    <i class="fa-solid fa-book"></i>
+
+                </div>
+
+                <div class="card purple">
+
+                    <div>
+
+                        <h3>Buku Dipinjam</h3>
+
+                        <p id="borrowCount">0</p>
+
+                    </div>
+
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                </div>
+
+                <div class="card orange">
+
+                    <div>
+
+                        <h3>User</h3>
+
+                        <p>1</p>
+
+                    </div>
+
+                    <i class="fa-solid fa-user"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- DATA BUKU -->
+
+        <div id="books" class="page hidden">
+
+            <div class="content">
+
+                <div class="top-content">
+
+                    <h2>Data Buku</h2>
+
+                    <input type="text" id="search" placeholder="Cari buku..." onkeyup="searchBook()">
+
+                </div>
+
+                <div class="form-section admin-only">
+
+                    <input type="text" id="title" placeholder="Judul Buku">
+
+                    <input type="text" id="author" placeholder="Penulis">
+
+                    <input type="number" id="stock" placeholder="Stock">
+
+                    <!-- DRAG DROP -->
+
+                    <div class="upload-box" id="uploadBox">
+
+                        <input type="file" id="cover" accept="image/*" hidden>
+
+
+                        <div class="upload-content">
+
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                            <p>
+                                Drag & Drop Cover Buku
+                            </p>
+
+                            <span>
+        atau klik untuk upload
+      </span>
+
+                        </div>
+
+                        <img id="previewImage">
+
+                    </div>
+
+                    <!-- UPLOAD EBOOK -->
+                    <div style="margin-top: 18px;" class="admin-only">
+                        <input type="file" id="ebook" accept=".pdf,.epub" />
+                    </div>
+
+                    <div class="admin-only">
+
+                        <button onclick="addBook()">
+    Tambah Buku
+  </button>
+
+                    </div>
+
+                </div>
+
+                <div class="product-grid" id="bookList"></div>
+
+
+                <div class="carousel-container">
+
+                    <div class="carousel" id="carousel"></div>
+
+                </div>
+
+                <div class="bookshelf-section">
+
+                    <h2>Rak Buku Digital</h2>
+
+                    <div class="bookshelf" id="bookshelf"></div>
+
+                </div>
+
+                <div class="right-strip" id="sideBookList">
+
+                </div>
+
+
+
+            </div>
+
+        </div>
+
+        <!-- PEMINJAMAN -->
+
+        <div id="borrow" class="page hidden">
+
+            <div class="content">
+
+
+
+                <div class="form-section">
+
+                    <input type="text" id="borrowName" placeholder="Nama Peminjam">
+
+                    <input type="number" id="borrowBookId" placeholder="ID Buku">
+
+                    <button onclick="borrowBook()">
+
+        Pinjam Buku
+
+      </button>
+
+                </div>
+
+                <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                    <h2 style="margin:0;">Peminjaman Buku</h2>
+                </div>
+
+                <div id="readerWrap" style="margin-top:10px;display:none;">
+                    <button onclick="closeReader()" style="margin-bottom:10px;padding:10px 14px;border:none;border-radius:12px;background:#334155;color:white;cursor:pointer;">
+                        Tutup Reader
+                    </button>
+                    <div id="readerTitle" style="margin: 10px 0; color:#e2e8f0; font-weight:800;"></div>
+                    <div id="readerAuthor" style="margin: 0 0 10px; color:#94a3b8; font-size:12px;"></div>
+                    <div id="readerNotice" style="margin-top:10px;padding:12px 14px;border-radius:12px;background:#111827;color:#e2e8f0;">
+                        File PDF akan dibuka di jendela browser terpisah.
+                    </div>
+                </div>
+
+                <table id="borrowTable" style="margin-top:14px;">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Nama</th>
+
+                            <th>Judul Buku</th>
+
+                            <th>Status</th>
+
+                            <th>Aksi</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="borrowList"></tbody>
+
+                    <div id="readerHint" style="margin-top:14px; color:#94a3b8; font-size:12px; display:none;">
+                        Tidak ada buku yang bisa dibaca.
+                    </div>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- PENGEMBALIAN -->
+
+        <div id="member" class="page hidden">
+            <div class="content">
+                <h2>Member</h2>
+                <p id="memberInfo">Anda masuk sebagai <i class="fa-solid fa-crown"></i>.</p>
+            </div>
+        </div>
+
+        <div id="return" class="page hidden">
+
+
+            <div class="content">
+
+                <h2>Pengembalian Buku</h2>
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Nama</th>
+
+                            <th>Buku</th>
+
+                            <th>Status</th>
+
+                            <th>Aksi</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="returnList"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script src="storage.js"></script>
+    <script src="script.js"></script>
+
+    <div class="popup hidden" id="popup">
+
+        <div class="popup-content">
+
+            <span class="close" onclick="closePopup()">
+          &times;
+        </span>
+
+            <img id="popupImage">
+
+            <h2 id="popupTitle"></h2>
+
+            <p id="popupAuthor"></p>
+
+            <p id="popupStock"></p>
+
+            <input id="borrowQty" type="number" min="1" value="1" style="width:100%;padding:12px 14px;border:none;border-radius:12px;background:#0f172a;color:white;margin-top:12px;" />
+
+            <button onclick="confirmBorrow()" style="margin-top:14px;padding:14px 20px;border:none;border-radius:12px;background:#2563eb;color:white;cursor:pointer;">Konfirmasi Pinjam</button>
+
+        </div>
+
+    </div>
+    <!-- Code injected by live-server -->
+    <script>
+        // <![CDATA[  <-- For SVG support
+        if ('WebSocket' in window) {
+            (function() {
+                function refreshCSS() {
+                    var sheets = [].slice.call(document.getElementsByTagName("link"));
+                    var head = document.getElementsByTagName("head")[0];
+                    for (var i = 0; i < sheets.length; ++i) {
+                        var elem = sheets[i];
+                        var parent = elem.parentElement || head;
+                        parent.removeChild(elem);
+                        var rel = elem.rel;
+                        if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+                            var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+                            elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+                        }
+                        parent.appendChild(elem);
+                    }
+                }
+                var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+                var address = protocol + window.location.host + window.location.pathname + '/ws';
+                var socket = new WebSocket(address);
+                socket.onmessage = function(msg) {
+                    if (msg.data == 'reload') window.location.reload();
+                    else if (msg.data == 'refreshcss') refreshCSS();
+                };
+                if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+                    console.log('Live reload enabled.');
+                    sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+                }
+            })();
+        } else {
+            console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+        }
+        // ]]>
+    </script>
+</body>
+
+</html>
