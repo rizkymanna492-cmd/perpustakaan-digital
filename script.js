@@ -4,6 +4,53 @@ let username = localStorage.getItem('username') || '';
 let books = [];
 let transactions = [];
 
+// File DB helpers (IndexedDB) — initialized on load if available
+async function initFileDB() {
+    if (window.fileDB && window.fileDB.ready) {
+        try {
+            await window.fileDB.ready();
+        } catch (e) {
+            console.warn('fileDB init failed', e);
+        }
+    }
+}
+
+async function storeFilesForBook(bookId, coverFile, ebookFile) {
+    if (!window.fileDB) return;
+    try {
+        if (coverFile) {
+            await window.fileDB.putCover(bookId, coverFile);
+            const blob = await window.fileDB.getCover(bookId);
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                const b = books.find(x => x.id === bookId);
+                if (b) { b.cover = url; persistBooks(); renderBooks(); }
+            }
+        }
+        if (ebookFile) {
+            await window.fileDB.putEbook(bookId, ebookFile);
+            const blob2 = await window.fileDB.getEbook(bookId);
+            if (blob2) {
+                const url = URL.createObjectURL(blob2);
+                const b = books.find(x => x.id === bookId);
+                if (b) { b.ebook = url; persistBooks(); }
+            }
+        }
+    } catch (e) {
+        console.warn('storeFilesForBook error', e);
+    }
+}
+
+async function removeFilesForBook(bookId) {
+    if (!window.fileDB) return;
+    try {
+        await window.fileDB.deleteCover(bookId);
+        await window.fileDB.deleteEbook(bookId);
+    } catch (e) {
+        console.warn('removeFilesForBook error', e);
+    }
+}
+
 // Pastikan selalu ambil data terbaru tiap halaman dibuka
 async function refreshLocalState() {
     const auth = window.storage?.getAuth ? window.storage.getAuth() : {};
@@ -95,6 +142,30 @@ window.onload = async function() {
 
     // Sync state & render buku awal
     await refreshLocalState();
+    // initialize file DB and hydrate covers/ebooks from IndexedDB
+    await initFileDB();
+    (async function hydrateFiles() {
+        if (!window.fileDB) return;
+        let changed = false;
+        for (const b of books) {
+            try {
+                if (!b.cover || b.cover === '' || !b.cover.startsWith('blob:')) {
+                    const blob = await window.fileDB.getCover(b.id);
+                    if (blob) { b.cover = URL.createObjectURL(blob); changed = true; }
+                }
+                if (!b.ebook || b.ebook === '' || !b.ebook.startsWith('blob:')) {
+                    const eb = await window.fileDB.getEbook(b.id);
+                    if (eb) { b.ebook = URL.createObjectURL(eb); changed = true; }
+                }
+            } catch (e) {
+                // ignore per-book errors
+            }
+        }
+        if (changed) {
+            persistBooks();
+            renderBooks();
+        }
+    })();
     renderBooks();
     renderTransactions();
     renderMemberProfile();
@@ -581,6 +652,8 @@ function addBook() {
             };
 
             books.push(book);
+            // store files in background (save blob to IndexedDB and replace cover with blob URL)
+            storeFilesForBook(book.id, file, null);
             persistBooks();
             renderBooks();
             clearForm();
@@ -602,6 +675,8 @@ function addBook() {
             };
 
             books.push(book);
+            // store blobs asynchronously and replace dataURLs with blob URLs when ready
+            storeFilesForBook(book.id, file, ebookFile);
             persistBooks();
             renderBooks();
             clearForm();
@@ -726,6 +801,12 @@ function renderBooks() {
 }
 
 function deleteBook(index) {
+
+    const book = books[index];
+    if (book) {
+        // remove any stored blobs asynchronously
+        removeFilesForBook(book.id);
+    }
 
     books.splice(index, 1);
 
