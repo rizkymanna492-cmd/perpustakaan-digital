@@ -98,11 +98,43 @@ window.onload = async function() {
     renderBooks();
     renderTransactions();
     renderMemberProfile();
+    await updateSupabaseStatus();
     const borrowCount = document.getElementById('borrowCount');
     if (borrowCount) {
         borrowCount.innerText = transactions.length;
     }
 
+}
+
+async function updateSupabaseStatus() {
+    const statusEl = document.getElementById('supabaseStatus');
+    if (!statusEl) return;
+
+    const config = window.SUPABASE_CONFIG || {};
+    const isConfigured = config.url && config.anonKey &&
+        config.url !== 'https://YOUR_PROJECT_REF.supabase.co' &&
+        config.anonKey !== 'YOUR_ANON_KEY';
+
+    if (!isConfigured) {
+        statusEl.innerText = 'Supabase offline';
+        statusEl.style.borderColor = '#ef4444';
+        statusEl.style.color = '#f87171';
+        return;
+    }
+
+    try {
+        if (window.storage?.loadBooks) {
+            await window.storage.loadBooks();
+        }
+        statusEl.innerText = 'Supabase aktif';
+        statusEl.style.borderColor = '#22c55e';
+        statusEl.style.color = '#86efac';
+    } catch (error) {
+        console.error('Supabase connection failed:', error);
+        statusEl.innerText = 'Supabase error';
+        statusEl.style.borderColor = '#f97316';
+        statusEl.style.color = '#fb923c';
+    }
 }
 
 function renderMemberProfile() {
