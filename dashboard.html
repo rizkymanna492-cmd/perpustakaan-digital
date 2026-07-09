@@ -150,6 +150,18 @@
                         <span id="chartAvailableBooksLabel">0</span>
                     </div>
                 </div>
+
+                <!-- Logout confirmation modal -->
+                <div class="modal hidden" id="logoutModal">
+                    <div class="modal-content">
+                        <h3>Konfirmasi Logout</h3>
+                        <p>Yakin ingin logout dari akun Anda?</p>
+                        <div class="modal-actions">
+                            <button onclick="cancelLogout()" class="btn-cancel">Batal</button>
+                            <button onclick="confirmLogout()" class="btn-confirm">Logout</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="chart-card" id="popularCard" style="margin-top:16px;">
                     <h3>Most Popular Books</h3>
                     <div class="popular-list" id="popularList">

@@ -265,20 +265,36 @@ function applyTheme(theme) {
 
 
 function logout() {
+    // buka modal kustom. jika modal tidak tersedia, fallback ke confirm
+    const modal = document.getElementById('logoutModal');
+    if (!modal) {
+        const ok = confirm('Yakin ingin logout?');
+        if (!ok) return;
+        performLogout();
+        return;
+    }
+    modal.classList.remove('hidden');
+}
 
-    // konfirmasi sebelum logout
-    const ok = confirm('Yakin ingin logout?');
-    if (!ok) return;
+function cancelLogout() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) modal.classList.add('hidden');
+}
 
+function confirmLogout() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) modal.classList.add('hidden');
+    performLogout();
+}
+
+function performLogout() {
     if (window.storage?.clearAuth) {
         window.storage.clearAuth();
     } else {
         localStorage.removeItem('role');
         localStorage.removeItem('username');
     }
-
     window.location.href = 'index.html';
-
 }
 
 function showMemberPanel() {
