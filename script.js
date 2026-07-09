@@ -105,6 +105,15 @@ window.onload = async function() {
         borrowCount.innerText = transactions.length;
     }
 
+    // bind profile logout button (ensure modal opens reliably)
+    const profileLogoutBtn = document.getElementById('profileLogoutBtn');
+    if (profileLogoutBtn) {
+        profileLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
+
 }
 
 async function updateSupabaseStatus() {
