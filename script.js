@@ -266,6 +266,10 @@ function applyTheme(theme) {
 
 function logout() {
 
+    // konfirmasi sebelum logout
+    const ok = confirm('Yakin ingin logout?');
+    if (!ok) return;
+
     if (window.storage?.clearAuth) {
         window.storage.clearAuth();
     } else {
@@ -276,7 +280,6 @@ function logout() {
     window.location.href = 'index.html';
 
 }
-
 
 function showMemberPanel() {
     const memberPage = document.getElementById('member');
