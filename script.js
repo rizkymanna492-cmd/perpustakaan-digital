@@ -359,18 +359,49 @@ function showMemberPanel() {
 
 
 function persistBooks() {
-    localStorage.setItem('books', JSON.stringify(books));
-    if (window.storage?.saveBooks) {
-        return window.storage.saveBooks(books);
+    // perform heavy serialization/storage in idle callback to avoid UI jank
+    const saver = () => {
+        try {
+            if (window.storage?.saveBooks) {
+                // fire-and-forget network/storage save
+                window.storage.saveBooks(books).catch(err => console.warn('saveBooks failed', err));
+            } else {
+                localStorage.setItem('books', JSON.stringify(books));
+            }
+        } catch (err) {
+            console.error('persistBooks error', err);
+        }
+    };
+
+    if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(saver, { timeout: 2000 });
+    } else {
+        setTimeout(saver, 50);
     }
+
+    // resolve immediately so UI can continue; actual save runs async
     return Promise.resolve(books);
 }
 
 function persistTransactions() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-    if (window.storage?.saveTransactions) {
-        return window.storage.saveTransactions(transactions);
+    const saver = () => {
+        try {
+            if (window.storage?.saveTransactions) {
+                window.storage.saveTransactions(transactions).catch(err => console.warn('saveTransactions failed', err));
+            } else {
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+            }
+        } catch (err) {
+            console.error('persistTransactions error', err);
+        }
+    };
+
+    if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(saver, { timeout: 2000 });
+    } else {
+        setTimeout(saver, 50);
     }
+
     return Promise.resolve(transactions);
 }
 
