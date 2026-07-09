@@ -43,6 +43,9 @@
                 <i class="fa-solid fa-arrow-right-arrow-left"></i> Peminjaman
             </li>
 
+            <li onclick="showPage('member')">
+                <i class="fa-solid fa-user"></i> Profil Saya
+            </li>
             <li onclick="showPage('return')">
                 <i class="fa-solid fa-rotate-left"></i> Pengembalian
             </li>
@@ -303,8 +306,26 @@
 
         <div id="member" class="page hidden">
             <div class="content">
-                <h2>Member</h2>
+                <h2>Profil Saya</h2>
                 <p id="memberInfo">Anda masuk sebagai <i class="fa-solid fa-crown"></i>.</p>
+                <div style="margin-top:20px; padding:20px; border-radius:16px; background:#111827;">
+                    <h3>Data Akun</h3>
+                    <p><strong>Username:</strong> <span id="memberUsername"></span></p>
+                    <p><strong>Role:</strong> <span id="memberRole"></span></p>
+                </div>
+                <div style="margin-top:20px; padding:20px; border-radius:16px; background:#111827;">
+                    <h3>Riwayat Peminjaman</h3>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:10px;">Buku</th>
+                                <th style="text-align:left; padding:10px;">Status</th>
+                                <th style="text-align:left; padding:10px;">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memberHistory"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

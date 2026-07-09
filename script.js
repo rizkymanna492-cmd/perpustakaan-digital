@@ -93,11 +93,37 @@ window.onload = async function() {
     await refreshLocalState();
     renderBooks();
     renderTransactions();
+    renderMemberProfile();
     const borrowCount = document.getElementById('borrowCount');
     if (borrowCount) {
         borrowCount.innerText = transactions.length;
     }
 
+}
+
+function renderMemberProfile() {
+    const memberUsername = document.getElementById('memberUsername');
+    const memberRole = document.getElementById('memberRole');
+    const memberHistory = document.getElementById('memberHistory');
+
+    if (memberUsername) {
+        memberUsername.innerText = username || '-';
+    }
+    if (memberRole) {
+        memberRole.innerText = role || '-';
+    }
+    if (!memberHistory) return;
+
+    const userTransactions = transactions.filter(trx => trx.borrower === username);
+    memberHistory.innerHTML = userTransactions.length > 0 ?
+        userTransactions.map(trx => `
+            <tr>
+                <td style="padding:10px;border-bottom:1px solid #334155;">${trx.title}</td>
+                <td style="padding:10px;border-bottom:1px solid #334155;">${trx.status}</td>
+                <td style="padding:10px;border-bottom:1px solid #334155;">${trx.date || '-'}</td>
+            </tr>
+        `).join('') :
+        `<tr><td colspan="3" style="padding:10px;color:#94a3b8;">Belum ada riwayat peminjaman.</td></tr>`;
 }
 
 
@@ -754,7 +780,8 @@ function confirmBorrow() {
         borrower: document.getElementById('borrowName')?.value || 'User',
         bookId: book.id,
         title: book.title,
-        status: `Dipinjam (${qty})`
+        status: `Dipinjam (${qty})`,
+        date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
     };
 
     transactions.push(transaction);
