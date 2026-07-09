@@ -162,6 +162,9 @@ async function renderDashboardCharts() {
     if (userCountEl) {
         userCountEl.innerText = userList.length;
     }
+
+    // render most popular books
+    renderMostPopularBooks();
 }
 
 async function loadUsers() {
@@ -1059,4 +1062,35 @@ function showPage(pageId) {
         .getElementById(pageId)
         .classList.remove('hidden');
 
+}
+
+function renderMostPopularBooks() {
+    const listEl = document.getElementById('popularList');
+    if (!listEl) return;
+
+    // count transactions per book title
+    const counts = {};
+    transactions.forEach(t => {
+        const key = t.title || (t.bookId && (books.find(b => b.id === t.bookId) || {}).title) || 'Unknown';
+        counts[key] = (counts[key] || 0) + 1;
+    });
+
+    const items = Object.keys(counts).map(title => ({ title, count: counts[title] }));
+    // include books with zero as optional (to show more entries)
+    books.forEach(b => {
+        if (!counts[b.title]) items.push({ title: b.title, count: 0 });
+    });
+
+    items.sort((a, b) => b.count - a.count || a.title.localeCompare(b.title));
+    const top = items.slice(0, 5);
+    const max = top.length > 0 ? Math.max(...top.map(i => i.count)) : 1;
+
+    listEl.innerHTML = top.map((it, idx) => `
+        <div class="popular-item">
+            <div class="popular-rank">${idx+1}</div>
+            <div class="popular-title">${it.title}</div>
+            <div class="popular-bar"><div class="popular-bar-inner" style="width:${max?Math.round((it.count/max)*100):0}%"></div></div>
+            <div class="popular-count">${it.count}</div>
+        </div>
+    `).join('');
 }

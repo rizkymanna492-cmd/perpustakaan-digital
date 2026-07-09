@@ -161,6 +161,37 @@ body {
 }
 
 
+/* Popular list */
+.popular-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.popular-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.popular-rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(148,163,184,0.12);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#e2e8f0;
+}
+.popular-title {
+    flex:1;color:#e2e8f0;
+}
+.popular-count {
+    width:60px;text-align:right;color:#e2e8f0;font-weight:600;
+}
+.popular-bar {
+    height:10px;background:rgba(148,163,184,0.08);border-radius:999px;overflow:hidden;margin-left:12px;margin-right:12px;flex:0 0 180px;
+}
+.popular-bar-inner {height:100%;background:linear-gradient(135deg,#2563eb,#60a5fa);width:0%;transition:width 0.4s ease;border-radius:999px}
+
+
 /* CARDS */
 
 .cards {
